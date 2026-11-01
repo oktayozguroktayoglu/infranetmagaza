@@ -1,0 +1,17 @@
+name: Infranet içe aktarma
+on: { push: { branches: [main] }, workflow_dispatch: {} }
+permissions: { contents: write }
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/import-infranet.mjs
+      - run: |
+          git add import public/brand || true
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Infranet stil ve logo içe aktarıldı [skip ci]"; git push
+          fi
