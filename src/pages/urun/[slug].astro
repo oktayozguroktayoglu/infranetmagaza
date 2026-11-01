@@ -1,0 +1,115 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProductArt from '../../components/ProductArt.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { products, catOf, byCat, tl, STORE } from '../../data/catalog.js';
+export function getStaticPaths() { return products.map((p) => ({ params: { slug: p.slug }, props: { p } })); }
+const { p } = Astro.props;
+const c = catOf(p);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const off = p.old ? Math.round((1 - p.price / p.old) * 100) : 0;
+const pick = (...slugs) => slugs.map((s) => products.find((x) => x.slug === s)).filter(Boolean);
+const BUNDLE = {
+  'network-switch': ['commscope-cat6-patch-cord-2m-10', 'eaton-9sx-3000i-rt'], router: ['fortigate-60f', 'commscope-cat6-patch-cord-2m-10'],
+  firewall: ['cisco-cbs350-24p-4g', 'eaton-5e-1100'], kablosuz: ['cisco-cbs350-24p-4g', 'commscope-cat6-patch-cord-2m-10'],
+  'sunucu-depolama': ['lande-42u-800x1000-kabinet', 'eaton-9sx-3000i-rt'], 'kabinet-rack': ['eaton-epdu-8-sigortali', 'rm-cat6a-24-port-patch-panel'],
+  'ups-guc': ['eaton-epdu-8-sigortali', 'lande-22u-600x600-kabinet'], 'mikro-veri-merkezi': ['su-baskini-sicaklik-sensor-kiti', 'sistem-odasi-gazli-sondurme'],
+  'bakir-kablolama': ['commscope-cat6-keystone-24', 'rm-cat6a-24-port-patch-panel'], 'fiber-optik': ['lande-24-port-odf-lc', 'rm-lc-lc-om4-patch-cord-3m'],
+  'yangin-gaz-algilama': ['su-baskini-sicaklik-sensor-kiti', 'konvansiyonel-duman-dedektoru-10'],
+};
+const bundle = [p, ...pick(...(BUNDLE[p.cat] || [])).filter((x) => x.slug !== p.slug && !x.quote)].slice(0, 3);
+const bundleTotal = bundle.reduce((a, x) => a + x.price * (x.min || 1), 0);
+const related = byCat(p.cat).filter((x) => x.slug !== p.slug).concat(products.filter((x) => x.cat !== p.cat && x.best)).slice(0, 10);
+const qtyOpts = p.unit ? null : Array.from({ length: 10 }, (_, i) => i + 1);
+const d = new Date(); const add = p.stock === 'Stokta' ? 2 : 7; d.setDate(d.getDate() + add + (d.getDay() === 5 ? 2 : d.getDay() === 6 ? 1 : 0));
+const eta = d.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+---
+<Base title={`${p.name} | Infranet Mağaza`} description={`${p.name} — ${p.bullets.join(', ')}. Infranet Mağaza’da kurumsal fiyat ve teslimat.`} product={p.slug}>
+  <div class="wrap crumbs"><a href={base}>Ana sayfa</a> › <a href={`${base}kategori/${c.slug}/`}>{c.name}</a> › <span>{p.brand}</span></div>
+  <div class="wrap pdp">
+    <div class="gallery">
+      <div class="thumbs"><button type="button" aria-current="true" aria-label="Ürün görseli"><ProductArt kind={p.kind} v={p.v} label="" /></button></div>
+      <figure class="main-img" style="margin:0"><ProductArt kind={p.kind} v={p.v} label={p.name} size="lg" /><figcaption style="font-size:12px;color:var(--muted);padding:8px 12px">Görsel temsilidir.</figcaption></figure>
+    </div>
+
+    <div class="pinfo">
+      <h1>{p.name}</h1>
+      <a class="brand-link" href={`${base}arama/?q=${encodeURIComponent(p.brand)}`}>Marka: {p.brand} — tüm ürünleri</a>
+      {p.best && <p style="margin:8px 0 0"><span class="best" style="position:static;display:inline-block">Çok satan</span> <span style="font-size:13px;color:var(--muted)">{c.name} kategorisinde</span></p>}
+      <hr />
+      {p.quote
+        ? <p class="p-price"><span class="now" style="font-size:24px;color:var(--brand-d)">Projeye özel fiyat</span></p><p class="p-old">Keşif sonrası net fiyat ve teslim süresi bildirilir. Yaklaşık başlangıç: {tl(p.price)} + KDV</p>
+        : <>
+            <div class="p-price">{off > 0 && <span class="off">-%{off}</span>}<span class="now" data-price={p.price}>{tl(p.price)}</span><small><span data-kdv-label>+ KDV</span>{p.unit && ` / ${p.unit}`}</small></div>
+            {p.old && <p class="p-old">Önceki fiyat: <s>{tl(p.old)}</s></p>}
+            <label class="kdv-toggle" style="margin-top:8px"><input type="checkbox" /> KDV dahil göster</label>
+          </>}
+      <hr />
+      <dl class="p-mini-specs">{Object.entries(p.specs).slice(0, 4).map(([k, v]) => <><dt>{k}</dt><dd>{v}</dd></>)}</dl>
+      <hr />
+      <h2 style="font-size:16px;margin:0">Bu ürün hakkında</h2>
+      <ul class="p-bullets">{p.bullets.map((b) => <li>{b}</li>)}</ul>
+    </div>
+
+    <aside class="buybox" aria-label="Satın alma">
+      {!p.quote && <div class="now" data-price={p.price}>{tl(p.price)}</div>}
+      {!p.quote && <small style="color:var(--muted);margin-top:-8px"><span data-kdv-label>+ KDV</span>{p.unit && ` / ${p.unit}`}</small>}
+      <p class="ship">{p.quote ? 'Teslim süresi keşif sonrası belirlenir.' : <>Tahmini teslimat: <b>{eta}</b></>}</p>
+      <p class:list={['stock', { warn: p.stock !== 'Stokta' }]}>{p.stock}</p>
+      {!p.quote && (
+        <label class="qty">{p.unit ? `Miktar (${p.unit}):` : 'Adet:'}
+          {qtyOpts ? <select id="qty">{qtyOpts.map((n) => <option>{n}</option>)}</select> : <input id="qty" type="number" min={p.min || 1} step={p.unit === 'metre' ? 50 : 1} value={p.min || 1} />}
+        </label>
+      )}
+      {p.min && <small style="color:var(--muted)">En az {p.min} {p.unit} satılır.</small>}
+      {p.quote
+        ? <button class="btn btn-cta" data-quote={p.slug}>Teklif listesine ekle</button>
+        : <>
+            <button class="btn btn-cta" data-add={p.slug} data-qty-from="#qty">Sepete ekle</button>
+            <a class="btn btn-buy" href={`${base}odeme/`} id="buynow">Hemen al</a>
+            <button class="btn btn-ghost" data-quote={p.slug} data-qty-from="#qty">Teklif listesine ekle</button>
+          </>}
+      <dl><dt>Satıcı</dt><dd>{STORE.company}</dd><dt>Gönderim</dt><dd>{STORE.name}</dd><dt>İade</dt><dd>14 gün içinde (koşullara bağlı)</dd><dt>Fatura</dt><dd>Kurumsal / bireysel e-fatura</dd></dl>
+      <p class="secure">🔒 Güvenli ödeme · 3D Secure</p>
+      <a href={`https://wa.me/${STORE.wa}?text=${encodeURIComponent(`Merhaba, "${p.name}" hakkında bilgi almak istiyorum.`)}`} rel="noopener" style="font-size:13px">Bu ürün hakkında soru sorun →</a>
+    </aside>
+  </div>
+
+  <div class="wrap">
+    {bundle.length > 1 && (
+      <section class="section-white">
+        <h2>Birlikte sık alınanlar</h2>
+        <div class="bundle">
+          {bundle.map((x, i) => <>{i > 0 && <span class="plus">+</span>}<div class="bundle-item"><ProductCard p={x} compact /></div></>)}
+          <div class="bundle-total">
+            <span>Toplam: <b data-price={bundleTotal}>{tl(bundleTotal)}</b> <small data-kdv-label>+ KDV</small></span>
+            <button class="btn btn-cta" id="bundle-add" data-items={bundle.map((x) => `${x.slug}:${x.min || 1}`).join(',')}>Hepsini sepete ekle</button>
+          </div>
+        </div>
+      </section>
+    )}
+    <section class="section-white">
+      <h2>Teknik özellikler</h2>
+      <table class="spec-table"><tbody>
+        <tr><th scope="row">Marka</th><td>{p.brand}</td></tr>
+        {Object.entries(p.specs).map(([k, v]) => <tr><th scope="row">{k}</th><td>{v}</td></tr>)}
+        <tr><th scope="row">Kategori</th><td>{c.name}</td></tr>
+        <tr><th scope="row">Stok kodu</th><td>INF-{p.slug.toUpperCase().slice(0, 18)}</td></tr>
+      </tbody></table>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:12px">Önizleme sürümündeki ürün bilgileri örnektir; yayına alınmadan önce üretici veri sayfalarıyla doğrulanacaktır.</p>
+    </section>
+    <section class="section-white" style="background:linear-gradient(110deg,#fff,#fff 60%,#fdecec)">
+      <h2>Kurulum ve devreye alma desteği</h2>
+      <p style="margin:0 0 12px;max-width:760px">Bu ürünü Infranet saha ekibiyle kurdurabilirsiniz: montaj, kablolama, yapılandırma, test ve raporlama. Projeniz için ücretsiz keşif planlayalım.</p>
+      <a class="btn btn-brand" style="width:auto" href={`${base}teklif/`}>Kurulum dahil teklif alın</a>
+    </section>
+    <section class="row" style="margin-top:0">
+      <div class="row-head"><h2>Benzer ürünler</h2></div>
+      <div class="row-scroll">{related.map((x) => <ProductCard p={x} />)}</div>
+    </section>
+  </div>
+</Base>
+<script is:inline>
+  document.getElementById('buynow')?.addEventListener('click', (e) => { const q = parseFloat(document.getElementById('qty')?.value || 1); window.storeApi.store.set('cart', { ...window.storeApi.store.get('cart'), [document.body.dataset.product]: q }); });
+  document.getElementById('bundle-add')?.addEventListener('click', (e) => { e.target.dataset.items.split(',').forEach((x) => { const [s, q] = x.split(':'); window.addToCart(s, +q); }); });
+</script>

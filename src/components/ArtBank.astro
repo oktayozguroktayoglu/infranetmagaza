@@ -1,0 +1,6 @@
+---
+// Sepet/teklif sayfalarında satırlara kopyalanacak ürün görselleri
+import ProductArt from './ProductArt.astro';
+import { products } from '../data/catalog.js';
+---
+<div id="artbank" hidden>{products.map((p) => <div data-art={p.slug}><ProductArt kind={p.kind} v={p.v} label={p.name} /></div>)}</div>

@@ -1,0 +1,26 @@
+---
+import ProductArt from './ProductArt.astro';
+import { tl } from '../data/catalog.js';
+const { p, compact = false } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const off = p.old ? Math.round((1 - p.price / p.old) * 100) : 0;
+---
+<article class:list={['card', { compact }]}>
+  <a class="card-img" href={`${base}urun/${p.slug}/`} tabindex="-1" aria-hidden="true">
+    <ProductArt kind={p.kind} v={p.v} label={p.name} />
+    {off > 0 && <span class="deal">%{off} indirim</span>}
+    {p.best && !off && <span class="best">Çok satan</span>}
+  </a>
+  <div class="card-body">
+    <p class="card-brand">{p.brand}</p>
+    <h3 class="card-title"><a href={`${base}urun/${p.slug}/`}>{p.name}</a></h3>
+    {p.quote
+      ? <p class="card-price quote-only">Fiyat için teklif alın</p>
+      : <p class="card-price"><span data-price={p.price}>{tl(p.price)}</span><small><span data-kdv-label>+ KDV</span>{p.unit && ` / ${p.unit}`}</small></p>}
+    {p.old && !p.quote && <p class="card-old">Önceki fiyat: <s>{tl(p.old)}</s></p>}
+    <p class:list={['card-stock', { warn: p.stock !== 'Stokta' }]}>{p.stock} · {p.ship}</p>
+    {!compact && (p.quote
+      ? <button class="btn btn-ghost" data-quote={p.slug}>Teklif listesine ekle</button>
+      : <button class="btn btn-cta" data-add={p.slug} data-min={p.min || 1}>Sepete ekle</button>)}
+  </div>
+</article>

@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import ArtBank from '../components/ArtBank.astro';
+import { STORE } from '../data/catalog.js';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<Base title="Teklif Listesi | Infranet Mağaza" description="Projeniz için ürünleri teklif listesine ekleyin; Infranet ekibi stok, teslim ve kurulum dahil kurumsal teklif hazırlasın.">
+  <div class="wrap cart-wrap">
+    <section class="cart-box">
+      <h1>Teklif Listesi</h1>
+      <p style="color:var(--muted);margin:0 0 6px">Toplu alım, proje ve kurulum dahil fiyat için ürünleri listeye ekleyin, bilgilerinizi bırakın. Uzmanlarımız en geç 1 iş günü içinde dönüş yapar.</p>
+      <div id="qrows"></div>
+      <div id="qempty" hidden style="padding:24px 0"><p style="font-size:16px">Teklif listeniz boş. Ürün sayfalarındaki <b>“Teklif listesine ekle”</b> butonunu kullanın ya da ihtiyacınızı aşağıya yazın.</p></div>
+    </section>
+    <aside class="summary">
+      <h3 style="margin:0">Teklif talebi</h3>
+      <form class="form-grid" id="qf" style="grid-template-columns:1fr">
+        <label>Firma<input name="firma" required></label>
+        <label>Yetkili ad soyad<input name="ad" required autocomplete="name"></label>
+        <label>Telefon<input name="tel" type="tel" required autocomplete="tel"></label>
+        <label>E-posta<input name="mail" type="email" autocomplete="email"></label>
+        <label>Proje notu<textarea name="not" rows="3" placeholder="Örn. 3 katlı ofis, 120 data noktası, sistem odası kurulumu"></textarea></label>
+        <label style="font-weight:400"><span><input type="checkbox" name="kesif"> Ücretsiz keşif istiyorum</span></label>
+        <label style="font-weight:400"><span><input type="checkbox" required> <a href={`${base}yardim/#kvkk`}>KVKK aydınlatma metnini</a> okudum.</span></label>
+        <button class="btn btn-cta" type="submit">WhatsApp ile gönder</button>
+        <button class="btn btn-ghost" type="button" id="qmail">E-posta ile gönder</button>
+      </form>
+    </aside>
+  </div>
+  <ArtBank />
+</Base>
+<script is:inline define:vars={{ WA: STORE.wa, MAIL: STORE.email }}>
+  const { store, bySlug, counts } = window.storeApi;
+  const render = () => {
+    const q = store.get('quote'), rows = document.getElementById('qrows'); rows.innerHTML = '';
+    Object.entries(q).forEach(([s, n]) => {
+      const p = bySlug[s]; if (!p) return;
+      const r = document.createElement('div'); r.className = 'cart-row';
+      r.innerHTML = `<a href="${BASE}urun/${s}/" class="ci"></a><div><h3><a href="${BASE}urun/${s}/" style="color:inherit">${p.n}</a></h3><p style="margin:0;font-size:12.5px;color:var(--muted)">Marka: ${p.b}</p><div class="cart-actions"><label class="qty">${p.u ? 'Miktar (' + p.u + ')' : 'Adet'}: <input type="number" min="1" value="${n}" data-s="${s}" style="width:90px"></label> | <button data-del="${s}">Listeden çıkar</button></div></div><div class="line-price" style="font-size:14px;font-weight:600;color:var(--muted)">${p.q ? 'Projeye özel' : 'Liste: ' + tl(p.p)}</div>`;
+      r.querySelector('.ci').append(document.querySelector(`[data-art="${s}"]`).firstElementChild.cloneNode(true));
+      rows.append(r);
+    });
+    document.getElementById('qempty').hidden = Object.keys(q).length > 0; counts();
+  };
+  document.addEventListener('change', (e) => { const s = e.target.dataset.s; if (!s) return; const q = store.get('quote'); q[s] = Math.max(1, parseFloat(e.target.value) || 1); store.set('quote', q); });
+  document.addEventListener('click', (e) => { const d = e.target.dataset.del; if (d) { const q = store.get('quote'); delete q[d]; store.set('quote', q); render(); } });
+  const msg = () => {
+    const f = new FormData(document.getElementById('qf')), q = store.get('quote');
+    const items = Object.entries(q).map(([s, n]) => `• ${n}${bySlug[s]?.u ? ' ' + bySlug[s].u : ' adet'} – ${bySlug[s]?.n}`).join('\n');
+    return `Merhaba, Infranet Mağaza üzerinden teklif talebi:\n\nFirma: ${f.get('firma')}\nYetkili: ${f.get('ad')}\nTelefon: ${f.get('tel')}\nE-posta: ${f.get('mail') || '-'}\nKeşif: ${f.get('kesif') ? 'İstiyorum' : 'Hayır'}\n\nÜrünler:\n${items || '-'}\n\nNot: ${f.get('not') || '-'}`;
+  };
+  document.getElementById('qf').addEventListener('submit', (e) => { e.preventDefault(); if (!e.target.reportValidity()) return; window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg())}`, '_blank', 'noopener'); });
+  document.getElementById('qmail').addEventListener('click', () => { const f = document.getElementById('qf'); if (!f.reportValidity()) return; location.href = `mailto:${MAIL}?subject=${encodeURIComponent('Infranet Mağaza teklif talebi')}&body=${encodeURIComponent(msg())}`; });
+  render();
+</script>

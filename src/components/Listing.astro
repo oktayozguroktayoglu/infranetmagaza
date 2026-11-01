@@ -1,0 +1,71 @@
+---
+import ProductCard from './ProductCard.astro';
+import { categories } from '../data/catalog.js';
+const { items, current = '', heading } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const brands = [...new Set(items.map((p) => p.brand))].sort((a, b) => a.localeCompare(b, 'tr'));
+const stocks = [...new Set(items.map((p) => p.stock))];
+---
+<div class="results-bar">
+  <div class="wrap results-bar-in">
+    <h1 set:html={heading} />
+    <div class="sort">
+      <label class="kdv-toggle"><input type="checkbox" /> KDV dahil göster</label>
+      <label for="sort">Sırala:</label>
+      <select id="sort"><option value="rel">Öne çıkanlar</option><option value="asc">Fiyat: Düşükten yükseğe</option><option value="desc">Fiyat: Yüksekten düşüğe</option><option value="name">Ada göre</option></select>
+    </div>
+  </div>
+</div>
+<div class="wrap listing">
+  <aside class="filters" aria-label="Filtreler">
+    <h3>Kategori</h3>
+    <div class="cat-links">{categories.map((c) => <a href={`${base}kategori/${c.slug}/`} aria-current={c.slug === current ? 'page' : undefined}>{c.name}</a>)}</div>
+    <h3>Marka</h3>
+    {brands.map((b) => <label><input type="checkbox" name="brand" value={b} /> {b}</label>)}
+    <h3>Fiyat (KDV hariç)</h3>
+    <div class="price-range"><input type="number" id="pmin" placeholder="En az" min="0" /><input type="number" id="pmax" placeholder="En çok" min="0" /><button type="button" id="pgo">Git</button></div>
+    <h3>Stok durumu</h3>
+    {stocks.map((s) => <label><input type="checkbox" name="stock" value={s} /> {s}</label>)}
+    <h3>Fırsatlar</h3>
+    <label><input type="checkbox" id="fdeal" /> İndirimdeki ürünler</label>
+    <button class="clear-f" type="button" id="fclear">Filtreleri temizle</button>
+  </aside>
+  <section>
+    <slot />
+    <div class="grid" id="grid">
+      {items.map((p, i) => (
+        <div class="gi" data-brand={p.brand} data-pr={p.quote ? 0 : p.price} data-stock={p.stock} data-deal={p.old ? '1' : ''} data-i={i} data-name={p.name}>
+          <ProductCard p={p} />
+        </div>
+      ))}
+      <p class="empty" id="empty" hidden>Bu filtrelere uygun ürün bulunamadı. <button class="clear-f" type="button" onclick="document.getElementById('fclear').click()">Filtreleri temizleyin</button></p>
+    </div>
+  </section>
+</div>
+<script is:inline>
+  (() => {
+    const grid = document.getElementById('grid'), items = [...grid.querySelectorAll('.gi')], empty = document.getElementById('empty');
+    const val = (n) => [...document.querySelectorAll(`input[name=${n}]:checked`)].map((i) => i.value);
+    const apply = () => {
+      const b = val('brand'), s = val('stock'), deal = document.getElementById('fdeal').checked;
+      const min = parseFloat(document.getElementById('pmin').value) || 0, max = parseFloat(document.getElementById('pmax').value) || Infinity;
+      let shown = 0;
+      items.forEach((el) => {
+        const pr = +el.dataset.pr;
+        const ok = (!b.length || b.includes(el.dataset.brand)) && (!s.length || s.includes(el.dataset.stock)) && (!deal || el.dataset.deal) && (pr === 0 ? min === 0 && max === Infinity : pr >= min && pr <= max);
+        el.hidden = !ok; if (ok) shown++;
+      });
+      empty.hidden = shown > 0;
+      const c = document.getElementById('count'); if (c) c.textContent = shown;
+    };
+    const sort = () => {
+      const m = document.getElementById('sort').value;
+      const k = (el) => m === 'name' ? el.dataset.name : m === 'rel' ? +el.dataset.i : (+el.dataset.pr || (m === 'asc' ? Infinity : -1));
+      items.sort((a, b) => { const x = k(a), y = k(b); return typeof x === 'string' ? x.localeCompare(y, 'tr') : m === 'desc' ? y - x : x - y; }).forEach((el) => grid.insertBefore(el, empty));
+    };
+    document.querySelector('.filters').addEventListener('change', apply);
+    document.getElementById('pgo').onclick = apply;
+    document.getElementById('sort').onchange = sort;
+    document.getElementById('fclear').onclick = () => { document.querySelectorAll('.filters input').forEach((i) => { if (i.type === 'checkbox') i.checked = false; else i.value = ''; }); apply(); };
+  })();
+</script>

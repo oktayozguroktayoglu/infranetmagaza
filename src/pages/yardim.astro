@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import { STORE } from '../data/catalog.js';
+const secs = [
+  ['teslimat', 'Teslimat'], ['iade', 'İade ve değişim'], ['odeme', 'Ödeme seçenekleri'], ['kesif', 'Ücretsiz keşif ve fizibilite'],
+  ['kurulum', 'Kurulum ve devreye alma'], ['mesafeli-satis', 'Mesafeli Satış Sözleşmesi'], ['on-bilgilendirme', 'Ön Bilgilendirme Formu'], ['kvkk', 'KVKK Aydınlatma Metni'], ['iletisim', 'İletişim'],
+];
+---
+<Base title="Yardım | Infranet Mağaza">
+  <div class="wrap help">
+    <nav aria-label="Yardım konuları">{secs.map(([id, t]) => <a href={`#${id}`}>{t}</a>)}</nav>
+    <article>
+      <div class="notice" style="margin-bottom:20px">Önizleme: yasal metinler taslaktır; yayından önce hukuk ve mali müşavir onayıyla tamamlanacaktır.</div>
+      <h2 id="teslimat">Teslimat</h2><p>Stoktaki ürünler 1-2 iş günü içinde kargoya verilir. {new Intl.NumberFormat('tr-TR').format(STORE.freeShipping)} TL ve üzeri siparişlerde kargo ücretsizdir. Kabinet, UPS ve sunucu gibi büyük ürünler anlaşmalı nakliye ile teslim edilir; İstanbul içinde Infranet ekibi tarafından teslimat ve montaj planlanabilir.</p>
+      <h2 id="iade">İade ve değişim</h2><p>Bireysel tüketiciler, teslimattan itibaren 14 gün içinde cayma hakkını kullanabilir. Ambalajı açılmış lisanslı yazılım/lisans ürünleri, ölçüye göre kesilmiş kablolar ve projeye özel üretimler cayma hakkı kapsamı dışındadır. Kurumsal alımlarda iade koşulları teklifte belirtilir.</p>
+      <h2 id="odeme">Ödeme seçenekleri</h2><p>Kredi/banka kartı (3D Secure, taksit seçenekleriyle), havale/EFT ve onaylı kurumsal müşteriler için açık hesap/vadeli ödeme.</p>
+      <h2 id="kesif">Ücretsiz keşif ve fizibilite</h2><p>Kablolama, sistem odası ve veri merkezi projelerinde Infranet uzmanları yerinde keşif yaparak ihtiyaç listesi ve maliyet raporu hazırlar.</p>
+      <h2 id="kurulum">Kurulum ve devreye alma</h2><p>Satın aldığınız ürünlerin montajı, sonlandırma, yapılandırma, test (Fluke/OTDR) ve raporlaması Infranet saha ekibi tarafından yapılabilir.</p>
+      <h2 id="mesafeli-satis">Mesafeli Satış Sözleşmesi</h2><p>[Taslak – 6502 sayılı Kanun ve Mesafeli Sözleşmeler Yönetmeliği’ne uygun metin eklenecek.]</p>
+      <h2 id="on-bilgilendirme">Ön Bilgilendirme Formu</h2><p>[Taslak – sipariş özetiyle birlikte otomatik oluşturulacak.]</p>
+      <h2 id="kvkk">KVKK Aydınlatma Metni</h2><p>[Taslak – infranet.com.tr KVKK metniyle uyumlu hale getirilecek.]</p>
+      <h2 id="iletisim">İletişim</h2><p><b>{STORE.company}</b><br />{STORE.address}<br />Tel: <a href={STORE.phoneTel}>{STORE.phone}</a> · GSM: {STORE.gsm}<br />E-posta: <a href={`mailto:${STORE.email}`}>{STORE.email}</a><br />{STORE.hours}</p>
+    </article>
+  </div>
+</Base>

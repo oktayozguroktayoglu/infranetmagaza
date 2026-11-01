@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<Base title="Giriş Yap | Infranet Mağaza">
+  <div style="display:grid;place-items:center;padding:30px 16px 50px">
+    <section class="cart-box" style="width:min(380px,100%);border:1px solid var(--line)">
+      <h1 style="font-size:26px">Giriş yap</h1>
+      <div class="notice" style="margin:10px 0 14px">Önizleme: üyelik sistemi canlı sürümde aktif olacak.</div>
+      <form class="form-grid" style="grid-template-columns:1fr" onsubmit="event.preventDefault()">
+        <label>E-posta veya cep telefonu<input autocomplete="username"></label>
+        <label>Şifre<input type="password" autocomplete="current-password"></label>
+        <button class="btn btn-cta" type="submit">Devam et</button>
+      </form>
+      <p style="font-size:12px;color:var(--muted)">Devam ederek Infranet Mağaza <a href={`${base}yardim/#kvkk`}>KVKK</a> ve <a href={`${base}yardim/#mesafeli-satis`}>satış koşullarını</a> kabul etmiş olursunuz.</p>
+      <hr style="border:0;border-top:1px solid #e7e7e7;margin:16px 0" />
+      <p style="text-align:center;font-size:13px;color:var(--muted);margin:0 0 8px">Infranet’te yeni misiniz?</p>
+      <a class="btn btn-ghost" href="#">Kurumsal hesap oluşturun</a>
+    </section>
+  </div>
+</Base>

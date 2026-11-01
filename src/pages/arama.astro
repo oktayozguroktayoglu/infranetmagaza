@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import ProductCard from '../components/ProductCard.astro';
+import { products, categories } from '../data/catalog.js';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<Base title="Arama | Infranet Mağaza">
+  <div class="results-bar"><div class="wrap results-bar-in"><h1 id="sh">Arama</h1><label class="kdv-toggle"><input type="checkbox" /> KDV dahil göster</label></div></div>
+  <div class="wrap" style="padding:16px 0 40px">
+    <div class="grid" id="sgrid">
+      {products.map((p) => <div class="gi" data-t={`${p.name} ${p.brand} ${categories.find((c) => c.slug === p.cat).name}`} data-c={p.cat} data-best={p.best ? '1' : ''}><ProductCard p={p} /></div>)}
+      <p class="empty" id="sempty" hidden>Sonuç bulunamadı. Farklı bir kelime deneyin ya da <a href={`${base}teklif/`}>teklif listesi</a> ile aradığınız ürünü bize yazın.</p>
+    </div>
+  </div>
+</Base>
+<script is:inline>
+  (() => {
+    const u = new URLSearchParams(location.search), q = (u.get('q') || '').trim(), k = u.get('k') || '', best = u.get('s') === 'best';
+    const norm = (s) => s.toLocaleLowerCase('tr').normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const words = norm(q).split(/\s+/).filter(Boolean);
+    let n = 0;
+    document.querySelectorAll('#sgrid .gi').forEach((el) => {
+      const t = norm(el.dataset.t);
+      const ok = (!k || el.dataset.c === k) && (!best || el.dataset.best) && words.every((w) => t.includes(w));
+      el.hidden = !ok; if (ok) n++;
+    });
+    document.getElementById('sempty').hidden = n > 0;
+    document.getElementById('sh').innerHTML = best ? `<b>${n}</b> çok satan ürün` : q ? `<b>${n}</b> sonuç: “${q.replace(/</g, '&lt;')}”` : `<b>${n}</b> ürün`;
+    const inp = document.getElementById('sq'); if (inp) inp.value = q;
+    const sel = document.querySelector('.search select'); if (sel) sel.value = k;
+  })();
+</script>

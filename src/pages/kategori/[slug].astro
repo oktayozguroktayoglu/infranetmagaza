@@ -1,0 +1,16 @@
+---
+import Base from '../../layouts/Base.astro';
+import Listing from '../../components/Listing.astro';
+import ProductArt from '../../components/ProductArt.astro';
+import { categories, byCat } from '../../data/catalog.js';
+export function getStaticPaths() { return categories.map((c) => ({ params: { slug: c.slug }, props: { c } })); }
+const { c } = Astro.props;
+const items = byCat(c.slug);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<Base title={`${c.name} | Infranet Mağaza`} description={`${c.name}: ${c.desc}. Kurumsal fiyat, hızlı teslimat ve Infranet kurulum desteği.`}>
+  <div class="wrap crumbs"><a href={base}>Ana sayfa</a> › {c.group} › <b>{c.name}</b></div>
+  <Listing items={items} current={c.slug} heading={`<b id="count">${items.length}</b> sonuç: “${c.name}”`}>
+    <div class="cat-banner"><div><h2>{c.name}</h2><p>{c.desc}. Projeniz için toplu fiyat almak isterseniz ürünleri teklif listesine ekleyin.</p></div><ProductArt kind={items[0].kind} v={items[0].v} label="" /></div>
+  </Listing>
+</Base>

@@ -1,0 +1,119 @@
+---
+import Base from '../layouts/Base.astro';
+import ProductArt from '../components/ProductArt.astro';
+import ProductCard from '../components/ProductCard.astro';
+import { categories, products, brands, byCat, STORE } from '../data/catalog.js';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const C = (s) => categories.find((c) => c.slug === s);
+const tiles = [
+  { title: 'Ağ ve güvenlik', cats: ['network-switch', 'router', 'firewall', 'kablosuz'] },
+  { title: 'Sunucu ve veri merkezi', cats: ['sunucu-depolama', 'kabinet-rack', 'ups-guc', 'mikro-veri-merkezi'] },
+  { title: 'Yapısal kablolama', cats: ['bakir-kablolama', 'fiber-optik'], items: ['commscope-cat6-utp-305m', 'rm-cat6a-24-port-patch-panel', 'rm-lc-lc-om4-patch-cord-3m', 'lande-24-port-odf-lc'] },
+];
+const P = (s) => products.find((p) => p.slug === s);
+const best = products.filter((p) => p.best);
+const deals = products.filter((p) => p.old);
+const sec = byCat('firewall').concat(byCat('kablosuz'));
+---
+<Base>
+  <section class="hero" aria-roledescription="carousel" aria-label="Kampanyalar">
+    <div class="slides">
+      <div class="slide s1">
+        <div><h2>Ağınızı yeni nesil switch’lerle büyütün</h2><p>Cisco, HPE Aruba, Ubiquiti ve MikroTik’te kurumsal fiyatlar. PoE+ modellerde stok avantajı.</p><a class="btn btn-cta" href={`${base}kategori/network-switch/`}>Switch’leri keşfedin</a></div>
+        <div class="slide-art"><ProductArt kind="switch" v={{ ports: 48, sfp: 4, poe: true }} label="" bare /></div>
+      </div>
+      <div class="slide s2">
+        <div><h2>FortiGate ile güvenli ofis</h2><p>Lisanslı FortiGate paketleri ve Infranet kurulum desteği tek sepette.</p><a class="btn btn-cta" href={`${base}kategori/firewall/`}>Firewall ürünleri</a></div>
+        <div class="slide-art"><ProductArt kind="firewall" v={{ ports: 10 }} label="" bare /></div>
+      </div>
+      <div class="slide s3">
+        <div><h2>Anahtar teslim mikro veri merkezi</h2><p>Kabinet, iklimlendirme, UPS, izleme ve söndürme. Ücretsiz keşif ve fizibilite ile.</p><a class="btn btn-cta" href={`${base}kategori/mikro-veri-merkezi/`}>Paketleri inceleyin</a></div>
+        <div class="slide-art"><ProductArt kind="mdc" v={{ u: 42 }} label="" bare /></div>
+      </div>
+    </div>
+    <button class="hero-nav prev" type="button" aria-label="Önceki">‹</button>
+    <button class="hero-nav next" type="button" aria-label="Sonraki">›</button>
+    <div class="hero-dots"><button type="button" aria-label="1. kampanya" aria-current="true"></button><button type="button" aria-label="2. kampanya"></button><button type="button" aria-label="3. kampanya"></button></div>
+  </section>
+
+  <div class="wrap">
+    <div class="home-tiles">
+      {tiles.map((t) => (
+        <section class="tile">
+          <h2>{t.title}</h2>
+          <div class="tile-grid">
+            {t.items
+              ? t.items.map((s) => { const p = P(s); return <a href={`${base}urun/${p.slug}/`}><ProductArt kind={p.kind} v={p.v} label={p.name} />{p.name.split(' ').slice(1, 5).join(' ')}</a>; })
+              : t.cats.map((s) => { const c = C(s); const p = byCat(s)[0]; return <a href={`${base}kategori/${s}/`}><ProductArt kind={p.kind} v={p.v} label={c.name} />{c.name}</a>; })}
+          </div>
+          <a class="tile-more" href={`${base}kategori/${t.cats[0]}/`}>Daha fazlasını görün</a>
+        </section>
+      ))}
+      <section class="tile tile-sign">
+        <h2>Kurumsal hesabınızla giriş yapın</h2>
+        <a class="btn btn-cta" href={`${base}giris/`}>Giriş yap</a>
+        <div class="tile-perk"><svg viewBox="0 0 24 24"><path d="M3 7h13v10H3zM16 10h4l1 3v4h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><circle cx="7" cy="18" r="2" fill="currentColor"/><circle cx="18" cy="18" r="2" fill="currentColor"/></svg><span><b>{new Intl.NumberFormat('tr-TR').format(STORE.freeShipping)} TL üzeri ücretsiz kargo</b>Stoktaki ürünler 1-2 iş gününde</span></div>
+        <div class="tile-perk"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg><span><b>Projeye özel teklif</b>Toplu alımlarda kurumsal fiyat</span></div>
+        <div class="tile-perk"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z" stroke="currentColor" stroke-width="2" fill="none"/></svg><span><b>Kurulum ve devreye alma</b>Infranet saha ekibiyle</span></div>
+      </section>
+    </div>
+
+    <section class="row">
+      <div class="row-head"><h2>Çok satanlar</h2><a href={`${base}arama/?s=best`}>Tümünü görün</a></div>
+      <div class="row-scroll">{best.map((p) => <ProductCard p={p} />)}</div>
+    </section>
+
+    <section class="row">
+      <div class="row-head"><h2>Günün fırsatları</h2></div>
+      <div class="row-scroll">{deals.concat(best.slice(0, 3)).map((p) => <ProductCard p={p} />)}</div>
+    </section>
+
+    <section class="b2b">
+      <div>
+        <h2>Projeniz mi var? Toplu teklif alın.</h2>
+        <p>Kablolamadan sistem odasına kadar tüm malzeme listenizi gönderin; Infranet ekibi stok, teslim süresi ve kurulum dahil teklif hazırlasın.</p>
+        <ul><li>Ücretsiz keşif ve fizibilite</li><li>Proje bazlı kurumsal fiyat</li><li>Açık hesap / vadeli ödeme*</li><li>Kurulum, test ve raporlama</li></ul>
+      </div>
+      <div class="b2b-actions">
+        <a class="btn btn-cta" href={`${base}teklif/`}>Teklif listesi oluştur</a>
+        <a class="btn btn-ghost" href={`https://wa.me/${STORE.wa}?text=${encodeURIComponent('Merhaba, proje için toplu teklif almak istiyorum.')}`} rel="noopener">WhatsApp’tan yazın</a>
+        <a class="btn btn-ghost" href={STORE.phoneTel}>{STORE.phone}</a>
+      </div>
+    </section>
+
+    <section class="row">
+      <div class="row-head"><h2>Güvenlik ve kablosuz</h2><a href={`${base}kategori/firewall/`}>Daha fazla</a></div>
+      <div class="row-scroll">{sec.map((p) => <ProductCard p={p} />)}</div>
+    </section>
+
+    <section class="row recent" hidden>
+      <div class="row-head"><h2>Son görüntülediğiniz ürünler</h2></div>
+      <div class="row-scroll" id="recent"></div>
+    </section>
+
+    <section class="row">
+      <div class="row-head"><h2>Markalar</h2></div>
+      <div class="brands">{brands.filter((b) => b !== 'Infranet').map((b) => <a href={`${base}arama/?q=${encodeURIComponent(b)}`}>{b}</a>)}</div>
+    </section>
+  </div>
+</Base>
+
+<script is:inline>
+  (() => {
+    const s = document.querySelector('.slides'), dots = [...document.querySelectorAll('.hero-dots button')];
+    let i = 0, t;
+    const go = (n) => { i = (n + 3) % 3; s.style.transform = `translateX(-${i * 100}%)`; dots.forEach((d, k) => d.setAttribute('aria-current', String(k === i))); clearInterval(t); t = setInterval(() => go(i + 1), 6000); };
+    document.querySelector('.hero-nav.prev').onclick = () => go(i - 1);
+    document.querySelector('.hero-nav.next').onclick = () => go(i + 1);
+    dots.forEach((d, k) => (d.onclick = () => go(k)));
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) t = setInterval(() => go(i + 1), 6000);
+    // son görüntülenenler: ürün kartlarını sayfadaki mevcut kartlardan kopyala
+    const r = JSON.parse(localStorage.getItem('inf_recent') || '[]');
+    if (r.length) {
+      const box = document.getElementById('recent');
+      const seen = new Set();
+      r.forEach((slug) => { const c = document.querySelector(`.card a[href$="/urun/${slug}/"]`)?.closest('.card'); if (c && !seen.has(slug)) { seen.add(slug); box.append(c.cloneNode(true)); } });
+      if (box.children.length) document.querySelector('.recent').hidden = false;
+    }
+  })();
+</script>

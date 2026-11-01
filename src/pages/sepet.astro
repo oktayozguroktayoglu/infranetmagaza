@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro';
+import ArtBank from '../components/ArtBank.astro';
+import { STORE } from '../data/catalog.js';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<Base title="Sepet | Infranet Mağaza">
+  <div class="wrap cart-wrap">
+    <section class="cart-box">
+      <h1>Alışveriş Sepeti</h1>
+      <p style="text-align:right;color:var(--muted);margin:0">Fiyat</p>
+      <div id="rows"></div>
+      <div id="empty" hidden style="padding:30px 0"><p style="font-size:18px">Sepetiniz boş.</p><a class="btn btn-cta" style="width:auto" href={base}>Alışverişe devam edin</a></div>
+      <p style="text-align:right;font-size:18px;margin:14px 0 0">Ara toplam (<span id="cnt">0</span> ürün): <b id="sub2"></b> <small style="color:var(--muted)">+ KDV</small></p>
+    </section>
+    <aside class="summary">
+      <div id="ship-msg" style="font-size:13px"></div>
+      <div class="progress"><span id="bar" style="width:0"></span></div>
+      <dl>
+        <dt>Ara toplam</dt><dd id="sub"></dd>
+        <dt>KDV (%{STORE.kdv * 100})</dt><dd id="kdv"></dd>
+        <dt>Kargo</dt><dd id="ship"></dd>
+        <dt class="total">Toplam</dt><dd class="total" id="tot"></dd>
+      </dl>
+      <a class="btn btn-cta" href={`${base}odeme/`} id="checkout">Ödemeye geç</a>
+      <a class="btn btn-ghost" href={`${base}teklif/`} id="toquote">Sepeti teklif listesine aktar</a>
+      <p style="font-size:12px;color:var(--muted);margin:0">Kurumsal müşteriler için açık hesap ve vadeli ödeme seçenekleri teklif üzerinden sunulur.</p>
+    </aside>
+  </div>
+  <ArtBank />
+</Base>
+<script is:inline define:vars={{ FREE: STORE.freeShipping, KDVR: STORE.kdv, SHIP: 250 }}>
+  const { store, bySlug, counts } = window.storeApi;
+  const render = () => {
+    const c = store.get('cart'), rows = document.getElementById('rows'); rows.innerHTML = '';
+    let sub = 0, n = 0;
+    Object.entries(c).forEach(([s, q]) => {
+      const p = bySlug[s]; if (!p) return;
+      const line = p.p * q; sub += line; n += p.u ? 1 : q;
+      const r = document.createElement('div'); r.className = 'cart-row';
+      r.innerHTML = `<a href="${BASE}urun/${s}/" class="ci"></a><div><h3><a href="${BASE}urun/${s}/" style="color:inherit">${p.n}</a></h3><p style="margin:0;color:var(--ok);font-size:13px">Stokta</p><p style="margin:2px 0;font-size:12.5px;color:var(--muted)">Marka: ${p.b}</p>
+        <div class="cart-actions"><label class="qty">${p.u ? 'Miktar (' + p.u + ')' : 'Adet'}: <input type="number" min="${p.m}" step="${p.u === 'metre' ? 50 : 1}" value="${q}" data-s="${s}" style="width:90px"></label> | <button data-del="${s}">Sil</button> | <button data-mv="${s}">Teklif listesine taşı</button></div></div>
+        <div class="line-price">${tl(line)}<small style="display:block;font-weight:400;color:var(--muted);font-size:12px">${tl(p.p)}${p.u ? ' / ' + p.u : ''}</small></div>`;
+      r.querySelector('.ci').append(document.querySelector(`[data-art="${s}"]`).firstElementChild.cloneNode(true));
+      rows.append(r);
+    });
+    const empty = !Object.keys(c).length;
+    document.getElementById('empty').hidden = !empty;
+    const ship = empty || sub >= FREE ? 0 : SHIP, kdv = (sub + ship) * KDVR;
+    document.getElementById('sub').textContent = tl(sub); document.getElementById('sub2').textContent = tl(sub);
+    document.getElementById('kdv').textContent = tl(kdv); document.getElementById('ship').textContent = ship ? tl(ship) : 'Ücretsiz';
+    document.getElementById('tot').textContent = tl(sub + ship + kdv); document.getElementById('cnt').textContent = n;
+    document.getElementById('bar').style.width = Math.min(100, (sub / FREE) * 100) + '%';
+    document.getElementById('ship-msg').innerHTML = sub >= FREE ? '<b style="color:var(--ok)">✓ Siparişiniz ücretsiz kargoya uygun.</b>' : `Ücretsiz kargo için <b>${tl(FREE - sub)}</b> daha ekleyin.`;
+    document.getElementById('checkout').toggleAttribute('aria-disabled', empty);
+    counts();
+  };
+  document.addEventListener('change', (e) => { const s = e.target.dataset.s; if (!s) return; const c = store.get('cart'); c[s] = Math.max(+e.target.min || 1, parseFloat(e.target.value) || 1); store.set('cart', c); render(); });
+  document.addEventListener('click', (e) => {
+    const d = e.target.dataset.del, m = e.target.dataset.mv;
+    if (d || m) { const c = store.get('cart'); if (m) { const q = store.get('quote'); q[m] = c[m]; store.set('quote', q); } delete c[d || m]; store.set('cart', c); render(); }
+  });
+  document.getElementById('toquote').addEventListener('click', () => { const c = store.get('cart'), q = store.get('quote'); Object.entries(c).forEach(([s, n]) => (q[s] = (q[s] || 0) + n)); store.set('quote', q); });
+  render();
+</script>

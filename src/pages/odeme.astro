@@ -1,0 +1,45 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+<Base title="Güvenli Ödeme | Infranet Mağaza">
+  <div class="wrap cart-wrap">
+    <section class="cart-box">
+      <div class="steps-bar"><b>1. Teslimat</b> › <b>2. Fatura</b> › <span>3. Ödeme</span> › <span>4. Onay</span></div>
+      <h1 style="font-size:24px">Güvenli ödeme</h1>
+      <div class="notice" style="margin:12px 0 18px">Önizleme sürümü: bu sayfada ödeme alınmaz. Yayında iyzico / PayTR sanal POS ile 3D Secure ödeme olacak.</div>
+      <form class="form-grid" id="co" novalidate>
+        <h2 class="full" style="font-size:18px;margin:6px 0 0">1. Teslimat adresi</h2>
+        <label>Ad Soyad<input required autocomplete="name"></label>
+        <label>Telefon<input required type="tel" autocomplete="tel" placeholder="05xx xxx xx xx"></label>
+        <label>İl<select><option>İstanbul</option><option>Ankara</option><option>İzmir</option><option>Kocaeli</option><option>Bursa</option><option>Diğer</option></select></label>
+        <label>İlçe<input></label>
+        <label class="full">Açık adres<textarea rows="2"></textarea></label>
+        <h2 class="full" style="font-size:18px;margin:10px 0 0">2. Fatura bilgileri</h2>
+        <div class="full seg" role="radiogroup"><label><input type="radio" name="ft" value="k" checked> Kurumsal</label><label><input type="radio" name="ft" value="b"> Bireysel</label></div>
+        <label class="corp">Firma unvanı<input></label>
+        <label class="corp">Vergi dairesi / No<input placeholder="Kadıköy / 1234567890"></label>
+        <label class="ind" hidden>T.C. Kimlik No<input inputmode="numeric" maxlength="11"></label>
+        <label class="full"><span><input type="checkbox" checked> Fatura adresi teslimat adresiyle aynı</span></label>
+        <h2 class="full" style="font-size:18px;margin:10px 0 0">3. Ödeme yöntemi</h2>
+        <div class="full seg" role="radiogroup"><label><input type="radio" name="pm" checked> Kredi / banka kartı</label><label><input type="radio" name="pm"> Havale / EFT</label><label><input type="radio" name="pm"> Açık hesap (onaylı kurumsal)</label></div>
+        <label class="full">Kart üzerindeki isim<input disabled placeholder="Önizlemede devre dışı"></label>
+        <label>Kart numarası<input disabled placeholder="•••• •••• •••• ••••"></label>
+        <label>Son kullanma / CVC<input disabled placeholder="AA/YY  •••"></label>
+        <label class="full" style="font-weight:400"><span><input type="checkbox" required> <a href={`${base}yardim/#on-bilgilendirme`}>Ön Bilgilendirme Formu</a>’nu ve <a href={`${base}yardim/#mesafeli-satis`}>Mesafeli Satış Sözleşmesi</a>’ni okudum, onaylıyorum.</span></label>
+        <button class="btn btn-buy full" type="submit" style="padding:12px;font-size:15px">Siparişi onayla</button>
+        <p class="full" id="co-msg" role="status" style="margin:0"></p>
+      </form>
+    </section>
+    <aside class="summary"><h3 style="margin:0">Sipariş özeti</h3><div id="osum" style="font-size:13px"></div><a href={`${base}sepet/`} style="font-size:13px">Sepeti düzenle</a></aside>
+  </div>
+</Base>
+<script is:inline>
+  const { store, bySlug } = window.storeApi;
+  const c = store.get('cart'); let sub = 0;
+  const lines = Object.entries(c).map(([s, q]) => { const p = bySlug[s]; if (!p) return ''; sub += p.p * q; return `<p style="margin:0 0 6px">${q}${p.u ? ' ' + p.u : ' x'} ${p.n}</p>`; }).join('');
+  const kdv = sub * window.KDV;
+  document.getElementById('osum').innerHTML = (lines || '<p>Sepetiniz boş.</p>') + `<dl style="display:grid;grid-template-columns:1fr auto;gap:4px;margin:10px 0 0"><dt>Ara toplam</dt><dd style="margin:0">${tl(sub)}</dd><dt>KDV</dt><dd style="margin:0">${tl(kdv)}</dd><dt><b>Toplam</b></dt><dd style="margin:0"><b>${tl(sub + kdv)}</b></dd></dl>`;
+  document.querySelectorAll('input[name=ft]').forEach((r) => r.addEventListener('change', () => { const k = document.querySelector('input[name=ft]:checked').value === 'k'; document.querySelectorAll('.corp').forEach((e) => (e.hidden = !k)); document.querySelectorAll('.ind').forEach((e) => (e.hidden = k)); }));
+  document.getElementById('co').addEventListener('submit', (e) => { e.preventDefault(); document.getElementById('co-msg').innerHTML = '<div class="notice">Önizleme: sipariş oluşturulmadı. Canlı sürümde bu adımda ödeme sayfasına yönlendirilir ve sipariş onay e-postası gönderilir.</div>'; });
+</script>

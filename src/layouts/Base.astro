@@ -1,0 +1,90 @@
+---
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+import { STORE, categories, groups, products } from '../data/catalog.js';
+const { title = `${STORE.name} | Ağ, Sunucu, Kablolama ve Veri Merkezi Ürünleri`, description = 'Infranet Mağaza: switch, router, firewall, sunucu, kabinet, UPS, bakır ve fiber kablolama ürünleri. Kurumsal fiyat ve teklif.', q = '', product = undefined } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const path = Astro.url.pathname;
+const mini = products.map((p) => ({ s: p.slug, n: p.name, b: p.brand, c: p.cat, p: p.price, u: p.unit || '', m: p.min || 1, k: p.kind, q: !!p.quote }));
+const cats = categories.map((c) => ({ s: c.slug, n: c.name }));
+---
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+  <meta name="theme-color" content="#0b1b33" />
+</head>
+<body data-product={product}>
+  <div class="demo-bar">Önizleme sürümü: ürünler ve fiyatlar örnektir, sipariş ve ödeme alınmaz.</div>
+  <header class="hdr">
+    <div class="hdr-top">
+      <a class="logo" href={base} aria-label={`${STORE.name} ana sayfa`}>
+        <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="var(--brand)"/><path d="M9 23V12M16 23V9M23 23v-7" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg></span>
+        <span class="logo-txt"><b>infranet</b><small>mağaza</small></span>
+      </a>
+      <div class="deliver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" fill="currentColor"/></svg><span><small>Teslimat</small>Türkiye geneli</span></div>
+      <form class="search" action={`${base}arama/`} role="search">
+        <label class="sr" for="sq">Ürün ara</label>
+        <select name="k" aria-label="Kategori">
+          <option value="">Tümü</option>
+          {categories.map((c) => <option value={c.slug}>{c.name}</option>)}
+        </select>
+        <input id="sq" name="q" type="search" placeholder="Switch, Cat6 kablo, FortiGate, 42U kabinet ara…" value={q} autocomplete="off" />
+        <button type="submit" aria-label="Ara"><svg viewBox="0 0 24 24"><path d="M10.5 18a7.5 7.5 0 1 1 5.3-2.2L21 21" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg></button>
+        <div class="suggest" hidden></div>
+      </form>
+      <a class="hdr-link" href={`${base}giris/`}><small>Merhaba, giriş yapın</small><b>Hesabım</b></a>
+      <a class="hdr-link" href={`${base}teklif/`}><small>Kurumsal</small><b>Teklif Listesi <span class="badge" data-count="quote">0</span></b></a>
+      <a class="cart-link" href={`${base}sepet/`} aria-label="Sepet"><span class="cart-ico"><svg viewBox="0 0 32 32"><path d="M3 5h4l3.2 15.2a2 2 0 0 0 2 1.6h11.6a2 2 0 0 0 2-1.5L28 10H8.4" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linejoin="round"/><circle cx="13" cy="27" r="2" fill="currentColor"/><circle cx="24" cy="27" r="2" fill="currentColor"/></svg><span class="cart-n" data-count="cart">0</span></span><b>Sepet</b></a>
+    </div>
+    <nav class="hdr-nav" aria-label="Kategoriler">
+      <button class="all-btn" type="button" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Tüm Kategoriler</button>
+      <div class="nav-scroll">
+        {categories.slice(0, 9).map((c) => <a href={`${base}kategori/${c.slug}/`} aria-current={path.includes(`/kategori/${c.slug}/`) ? 'page' : undefined}>{c.name}</a>)}
+      </div>
+      <a class="nav-cta" href={`${base}teklif/`}>Projeniz için toplu teklif</a>
+    </nav>
+  </header>
+
+  <div class="drawer" id="drawer" hidden>
+    <div class="drawer-panel" role="dialog" aria-label="Tüm kategoriler">
+      <div class="drawer-head"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="currentColor"/><path d="M4 21a8 8 0 0 1 16 0" fill="currentColor"/></svg> Merhaba, giriş yapın <button class="drawer-close" type="button" aria-label="Kapat">✕</button></div>
+      {groups.map((g) => (
+        <div class="drawer-sec"><h3>{g}</h3>{categories.filter((c) => c.group === g).map((c) => <a href={`${base}kategori/${c.slug}/`}>{c.name}<span>›</span></a>)}</div>
+      ))}
+      <div class="drawer-sec"><h3>Yardım ve Ayarlar</h3><a href={`${base}teklif/`}>Kurumsal teklif</a><a href={`${base}yardim/`}>Teslimat ve iade</a><a href={`${base}yardim/#iletisim`}>İletişim</a></div>
+    </div>
+  </div>
+
+  <main id="main"><slot /></main>
+
+  <footer class="ftr">
+    <a class="to-top" href="#">Başa dön</a>
+    <div class="ftr-cols wrap">
+      <div><h4>Infranet’i tanıyın</h4><a href="https://infranet.com.tr/hakkimizda/" rel="noopener">Hakkımızda</a><a href="https://infranet.com.tr/projelerimiz/" rel="noopener">Projelerimiz</a><a href="https://infranet.com.tr/hizmetlerimiz/" rel="noopener">Hizmetlerimiz</a><a href="https://infranet.com.tr/bilgi-bankasi/" rel="noopener">Bilgi Bankası</a></div>
+      <div><h4>Kategoriler</h4>{categories.slice(0, 6).map((c) => <a href={`${base}kategori/${c.slug}/`}>{c.name}</a>)}</div>
+      <div><h4>Kurumsal hizmetler</h4><a href={`${base}teklif/`}>Toplu teklif</a><a href={`${base}kategori/mikro-veri-merkezi/`}>Anahtar teslim mikro DC</a><a href={`${base}yardim/#kesif`}>Ücretsiz keşif ve fizibilite</a><a href={`${base}yardim/#kurulum`}>Kurulum ve devreye alma</a></div>
+      <div><h4>Yardım</h4><a href={`${base}yardim/#teslimat`}>Teslimat</a><a href={`${base}yardim/#iade`}>İade ve değişim</a><a href={`${base}yardim/#odeme`}>Ödeme seçenekleri</a><a href={`${base}yardim/#iletisim`}>İletişim</a></div>
+    </div>
+    <div class="ftr-bottom">
+      <div class="wrap ftr-bottom-in">
+        <a class="logo logo-sm" href={base}><span class="logo-txt"><b>infranet</b><small>mağaza</small></span></a>
+        <p>{STORE.company} · {STORE.address} · <a href={STORE.phoneTel}>{STORE.phone}</a> · <a href={`mailto:${STORE.email}`}>{STORE.email}</a></p>
+        <p class="legal"><a href={`${base}yardim/#mesafeli-satis`}>Mesafeli Satış Sözleşmesi</a><a href={`${base}yardim/#on-bilgilendirme`}>Ön Bilgilendirme Formu</a><a href={`${base}yardim/#iade`}>İade Koşulları</a><a href={`${base}yardim/#kvkk`}>KVKK</a></p>
+        <p class="pay" aria-label="Ödeme yöntemleri"><span>VISA</span><span>Mastercard</span><span>Troy</span><span>Havale/EFT</span><span>Açık hesap*</span></p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" role="status" aria-live="polite" hidden></div>
+  <script is:inline define:vars={{ __CAT: mini, __CATS: cats, __BASE: base, __KDV: STORE.kdv }}>
+    window.CATALOG = __CAT; window.CATS = __CATS; window.BASE = __BASE; window.KDV = __KDV;
+  </script>
+  <script src="/infranetmagaza/js/store.js" is:inline></script>
+</body>
+</html>
